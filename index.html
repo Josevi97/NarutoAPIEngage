@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es" ng-app="MiAplicacion">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width" />
+        <title>Cliente Naruto</title>
+
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+
+        <style type="text/css" media="screen">
+            #popup-background {
+                background-color: rgba(0, 0, 0, .3);
+                z-index: 100;
+            }
+
+            #popup {
+                min-width: 300px;
+                max-width: 500px;
+                min-height: 200px;
+                max-height: 700px;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+            }
+
+            #popup img {
+                object-fit: cover;
+                width: 120px;
+                height: 120px;
+            }
+            img.card-img {
+                object-fit: cover;
+                width: 80px;
+                height: 80px;
+            }
+
+            div.mi-card {
+                width: 260px;
+                overflow: hidden;
+                cursor: pointer;
+            }
+
+            div.mi-card:hover {
+                box-shadow: 0px 2px 8px 4px rgba(0, 0, 0, .4);
+            }
+
+            #datos {
+                font-size: .8em;
+            }
+
+            #datos span {
+                max-width: 10px;
+            }
+        </style>
+
+        <script type="text/javascript">
+            var miModulo = angular.module("MiAplicacion", []).controller('MiControlador', ['$scope', '$http', function
+            ($scope, $http) {
+                $scope.clansArray = new Array();
+
+                $scope.getClans = () => {
+                    $http({
+                        method: "GET",
+                        url: "https://naruto-api.herokuapp.com/api/v1/clans"
+                    })
+                        .then(res => {
+                            $scope.clans = res.data;
+                        });
+                }
+
+                $scope.modifyClans = clan => {
+                    var index = $scope.clansArray.indexOf(clan);
+
+                    if (index != -1) $scope.clansArray.splice(index, 1);
+                    else $scope.clansArray.push(clan);
+
+                    $scope.getCharacters();
+                }
+
+                $scope.modifyInput = input => {
+                    $scope.input = input.toLowerCase();
+                    $scope.getCharacters();
+                }
+
+                $scope.getCharacters = () => {
+                    $http({
+                        method: "GET",
+                        url: "https://naruto-api.herokuapp.com/api/v1/characters"
+                    })
+                        .then(res => {
+                            $scope.characters = res.data.filter(
+                                x => $scope.clansArray.length == 0 || $scope.clansArray.indexOf(
+                                    x.info['Clã'] ?
+                                        x.info['Clã'].replace('ã', 'a') : 
+                                        -1
+                                ) != -1
+                            );
+
+                            $scope.characters = $scope.characters.filter(
+                                x => $scope.input != undefined ? 
+                                     x.name.toLowerCase().includes($scope.input) :
+                                     true
+                            );
+                        });
+                }
+
+                $scope.getCharacter = (id, callback) => {
+                    $http({
+                        method: "GET",
+                        url: `https://naruto-api.herokuapp.com/api/v1/characters/${id}`
+                    })
+                        .then(res => callback(res));
+                }
+
+                $scope.generarModal = id => {
+                    $scope.getCharacter(id, res => {
+                        $scope.selected = res.data;
+                        $scope.selectedVisible = true;
+                        console.log($scope.selected);
+                    });
+                }
+
+                $scope.getClans();
+                $scope.getCharacters();
+                $scope.hidePopup = () => $scope.selectedVisible = false;
+            }]);
+        </script>
+    </head>
+    <body ng-controller="MiControlador">
+        <div 
+            id="popup-background"
+            class="position-fixed w-100 h-100"
+            ng-show="selectedVisible">
+            <div 
+                class="position-absolute w-100 h-100" 
+                ng-click="hidePopup()"></div>
+            <div 
+                id="popup" 
+                class="position-fixed p-2 bg-white shadow border"
+                ng-click="">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <img src="{{selected.images[0]}}" alt="missing">
+                        <img src="{{selected.images[1]}}" alt="missing">
+                    </div>
+                    <div 
+                        class="btn p-0"
+                        ng-click="hidePopup()">
+                        x 
+                    </div>
+                </div>
+                <hr>
+                <div class="text-nowrap">
+                    <div>Registro ninja: <em>{{selected.info['Registro Ninja']}}</em></div>
+                    <div>Nombre: <em>{{selected.name}}</em></div>
+                    <div>Afiliacion: <em>{{selected.info['Afiliação']}}</em></div>
+                    <div>Ocupacion: <em>{{selected.info['Ocupação']}}</em></div>
+                    <div>Genero: <em>{{selected.info['Sexo']}}</em></div>
+                </div>
+                <hr>
+                <p>{{selected.about[0]}}</p>
+                <a 
+                    target="_blank" 
+                    href="{{selected.page}}">
+                    Visitar fandom
+                </a>
+            </div>
+        </div>
+
+        <div class="container-fluid">
+            <h2 class="text-center ">Personajes de naruto</h2>
+
+            <div class="input-group mt-3">
+                <input 
+                    id="input"
+                    class="form-control" 
+                    type="text"
+                    placeholder="Busca un personaje por su nombre"
+                    ng-model="test"
+                    ng-change="modifyInput(test)">
+
+                    <label for="{{i}}">{{i}}</label>
+            </div>
+            <div class="row mt-2">
+                <div class="col-md-2 col-sm-6">
+                    <h3>Clanes</h3>
+                    <div ng-repeat="i in clans">
+                        <input 
+                            id="i.name"
+                            name="i.name"
+                            type="checkbox"
+                            ng-model="name"
+                            ng-change="modifyClans(i.name)">
+                        <label>{{i.name}}</label>
+                    </div>
+                </div>
+                <div class="col-md-10 col-sm-6">
+                    <h3>Personajes</h3>
+
+                    <div class="d-flex flex-wrap">
+                        <div 
+                            class="mi-card bg-white mb-2 me-2 border" 
+                            ng-repeat="i in characters">
+                            <div ng-click="generarModal(i.id)">
+                                <div class="d-flex align-items-start">
+                                    <img 
+                                        class="card-img" 
+                                        src="{{i.images[0]}}">
+                                    <div 
+                                        id="datos" 
+                                        class="ms-2 text-nowrap">
+                                        <div>Nombre: <em>{{i.name}}</em></div>
+                                        <div>Afiliacion: <em>{{i.info['Afiliação']}}</em></div>
+                                        <div>Genero: <em>{{i.info['Sexo']}}</em></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> 
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
