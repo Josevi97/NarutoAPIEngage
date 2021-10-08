@@ -62,11 +62,14 @@
         <script type="text/javascript">
             var miModulo = angular.module("MiAplicacion", []).controller('MiControlador', ['$scope', '$http', function
             ($scope, $http) {
-                $scope.clansArray = new Array();
+                // Declaracion de variables
                 $scope.url = "https://naruto-api.herokuapp.com/api/v1/"
+                $scope.clansArray = new Array();
 
+                // Funcion que oculta el popup que aparece al seleccionar un personaje
                 $scope.hidePopup = () => $scope.selectedVisible = false;
 
+                // Visualiza el popup al seleccionar un personaje
                 $scope.generarModal = id => {
                     $scope.getCharacter(id, res => {
                         $scope.selected = res.data;
@@ -75,6 +78,8 @@
                     });
                 }
 
+                // Modifica el array de clans comprobando si se encuentra el clan o no (quitarlo o insertarlo)
+                // y finalmente consulta los personajes nuevamente
                 $scope.modifyClans = clan => {
                     var index = $scope.clansArray.indexOf(clan);
 
@@ -84,11 +89,14 @@
                     $scope.getCharacters();
                 }
 
+                // Modifica el contenido del input segun el buscador de personajes para posteriormente
+                // consultar los personajes
                 $scope.modifyInput = input => {
                     $scope.input = input.toLowerCase();
                     $scope.getCharacters();
                 }
 
+                // Consulta los clanes
                 $scope.getClans = () => {
                     $http({
                         method: "GET",
@@ -99,6 +107,7 @@
                         });
                 }
 
+                // Consulta los personajes y los filtra segun los checkboxes y el input
                 $scope.getCharacters = () => {
                     $http({
                         method: "GET",
@@ -121,6 +130,7 @@
                         });
                 }
 
+                // Consulta un personaje segun un id y ejecuta un callback pasandole la respuesta
                 $scope.getCharacter = (id, callback) => {
                     $http({
                         method: "GET",
@@ -129,6 +139,7 @@
                         .then(res => callback(res));
                 }
 
+                // Consulta los clanes y los personajes
                 $scope.getClans();
                 $scope.getCharacters();
             }]);
