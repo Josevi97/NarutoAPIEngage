@@ -63,15 +63,16 @@
             var miModulo = angular.module("MiAplicacion", []).controller('MiControlador', ['$scope', '$http', function
             ($scope, $http) {
                 $scope.clansArray = new Array();
+                $scope.url = "https://naruto-api.herokuapp.com/api/v1/"
 
-                $scope.getClans = () => {
-                    $http({
-                        method: "GET",
-                        url: "https://naruto-api.herokuapp.com/api/v1/clans"
-                    })
-                        .then(res => {
-                            $scope.clans = res.data;
-                        });
+                $scope.hidePopup = () => $scope.selectedVisible = false;
+
+                $scope.generarModal = id => {
+                    $scope.getCharacter(id, res => {
+                        $scope.selected = res.data;
+                        $scope.selectedVisible = true;
+                        console.log($scope.selected);
+                    });
                 }
 
                 $scope.modifyClans = clan => {
@@ -88,10 +89,20 @@
                     $scope.getCharacters();
                 }
 
+                $scope.getClans = () => {
+                    $http({
+                        method: "GET",
+                        url: `${$scope.url}clans`
+                    })
+                        .then(res => {
+                            $scope.clans = res.data;
+                        });
+                }
+
                 $scope.getCharacters = () => {
                     $http({
                         method: "GET",
-                        url: "https://naruto-api.herokuapp.com/api/v1/characters"
+                        url: `${$scope.url}characters`
                     })
                         .then(res => {
                             $scope.characters = res.data.filter(
@@ -113,22 +124,13 @@
                 $scope.getCharacter = (id, callback) => {
                     $http({
                         method: "GET",
-                        url: `https://naruto-api.herokuapp.com/api/v1/characters/${id}`
+                        url: `${$scope.url}characters/${id}`
                     })
                         .then(res => callback(res));
                 }
 
-                $scope.generarModal = id => {
-                    $scope.getCharacter(id, res => {
-                        $scope.selected = res.data;
-                        $scope.selectedVisible = true;
-                        console.log($scope.selected);
-                    });
-                }
-
                 $scope.getClans();
                 $scope.getCharacters();
-                $scope.hidePopup = () => $scope.selectedVisible = false;
             }]);
         </script>
     </head>
@@ -139,7 +141,8 @@
             ng-show="selectedVisible">
             <div 
                 class="position-absolute w-100 h-100" 
-                ng-click="hidePopup()"></div>
+                ng-click="hidePopup()">
+            </div>
             <div 
                 id="popup" 
                 class="position-fixed p-2 bg-white shadow border"
@@ -184,12 +187,13 @@
                     placeholder="Busca un personaje por su nombre"
                     ng-model="test"
                     ng-change="modifyInput(test)">
-
-                    <label for="{{i}}">{{i}}</label>
+                <label for="{{i}}">{{i}}</label>
             </div>
+
             <div class="row mt-2">
                 <div class="col-md-2 col-sm-6">
                     <h3>Clanes</h3>
+
                     <div ng-repeat="i in clans">
                         <input 
                             id="i.name"
@@ -200,6 +204,7 @@
                         <label>{{i.name}}</label>
                     </div>
                 </div>
+
                 <div class="col-md-10 col-sm-6">
                     <h3>Personajes</h3>
 
